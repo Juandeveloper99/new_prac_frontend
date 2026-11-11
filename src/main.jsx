@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import { MantineProvider, createTheme } from '@mantine/core';
 import { Notifications } from '@mantine/notifications';
+import { ModalsProvider } from '@mantine/modals';
 import { DatesProvider } from '@mantine/dates';
 import '@mantine/core/styles.css';
 import '@mantine/notifications/styles.css';
@@ -19,11 +20,13 @@ ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <MantineProvider theme={theme} defaultColorScheme="light">
       <Notifications position="top-right" />
-      <DatesProvider settings={{ locale: 'es', firstDayOfWeek: 1 }}>
-        <BrowserRouter>
-          <App />
-        </BrowserRouter>
-      </DatesProvider>
+      <ModalsProvider>
+        <DatesProvider settings={{ locale: 'es', firstDayOfWeek: 1 }}>
+          <BrowserRouter>
+            <App />
+          </BrowserRouter>
+        </DatesProvider>
+      </ModalsProvider>
     </MantineProvider>
   </React.StrictMode>
 );
