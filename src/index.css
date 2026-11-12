@@ -1,1 +1,9 @@
+﻿.mantine-Card-root {
+  background-color: #ffffff;
+  border-color: #e9ecef;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
 
+body {
+  background-color: #f8f5f3;
+}
