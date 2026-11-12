@@ -8,11 +8,13 @@ import { useDisclosure } from '@mantine/hooks';
 import { modals } from '@mantine/modals';
 import { notifications } from '@mantine/notifications';
 import {
-  IconPlus, IconEye, IconArrowRight, IconX,
+  IconPlus, IconEye, IconArrowRight, IconX, IconReceipt,
 } from '@tabler/icons-react';
+import { recetasApi } from '../api/recetas';
 import { pedidosApi } from '../api/pedidos';
 import { clientesApi } from '../api/clientes';
-import { recetasApi } from '../api/recetas';
+import { facturasApi } from '../api/facturas';
+
 import PedidoForm from '../components/PedidoForm';
 import PedidoDetalle from '../components/PedidoDetalle';
 
@@ -59,15 +61,17 @@ export default function Pedidos() {
   };
 
   const cargarCatalogos = async () => {
-    try {
-      const [c, r] = await Promise.all([
-        clientesApi.listar(),
-        recetasApi.listar(),
-      ]);
-      setClientes(c);
-      setRecetas(r);
-    } catch (err) {}
-  };
+  try {
+    const [c, r] = await Promise.all([
+      clientesApi.listar(),
+      recetasApi.listar(),
+    ]);
+    setClientes(c);
+    setRecetas(r);
+  } catch (err) {
+    console.error('Error al cargar catálogos:', err);
+  }
+};
 
   useEffect(() => {
     cargar();
@@ -78,9 +82,10 @@ export default function Pedidos() {
     cargar(filtroEstado);
   }, [filtroEstado]);
 
-  const abrirCrear = () => {
-    openForm();
-  };
+  const abrirCrear = async () => {
+  await cargarCatalogos();
+  openForm();
+};
 
   const abrirDetalle = async (item) => {
     try {
@@ -122,6 +127,18 @@ export default function Pedidos() {
       await cargar(filtroEstado);
     } catch (err) {}
   };
+
+  const facturarPedido = async (item) => {
+  try {
+    const factura = await facturasApi.crear({ pedido_id: item.id });
+    notifications.show({
+      title: 'Factura creada',
+      message: `${factura.numero_factura} - Total C$ ${Number(factura.total).toFixed(2)}`,
+      color: 'green',
+    });
+    await cargar(filtroEstado);
+  } catch (err) {}
+};
 
   const cancelarPedido = (item) => {
     modals.openConfirmModal({
@@ -196,7 +213,7 @@ export default function Pedidos() {
                 {items.map((it) => {
                   const info = ESTADOS[it.estado] ?? { color: 'gray', label: it.estado };
                   const siguiente = SIGUIENTE_ESTADO[it.estado];
-                  const puedeCancelar = !['entregado', 'cancelado'].includes(it.estado);
+                  const puedeCancelar = ['pendiente', 'en_proceso', 'listo'].includes(it.estado);
 
                   return (
                     <Table.Tr key={it.id}>
@@ -216,6 +233,17 @@ export default function Pedidos() {
                               <IconEye size={16} />
                             </ActionIcon>
                           </Tooltip>
+                          {it.estado === 'listo' && (
+  <Tooltip label="Facturar pedido">
+    <ActionIcon
+      variant="light"
+      color="teal"
+      onClick={() => facturarPedido(it)}
+    >
+      <IconReceipt size={16} />
+    </ActionIcon>
+  </Tooltip>
+)}
                           {siguiente && (
                             <Tooltip label={`Avanzar a: ${ESTADOS[siguiente].label}`}>
                               <ActionIcon
